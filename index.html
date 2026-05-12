@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>欧哈纳 · Ohana</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700;900&family=Cinzel:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --deep-blue: #0a0e27;
+    --mid-blue: #141b3d;
+    --purple: #6b4fa0;
+    --pink: #e8927c;
+    --gold: #f0c27f;
+    --glow-pink: #ff7eb3;
+    --glow-purple: #a855f7;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--purple) var(--deep-blue);
+  }
+
+  body {
+    background: var(--deep-blue);
+    color: #e0d8f0;
+    font-family: 'Noto Serif SC', serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ====== STARFIELD CANVAS ====== */
+  #starfield {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ====== LOADING SCREEN ====== */
+  #loader {
+    position: fixed;
+    inset: 0;
+    background: var(--deep-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 1s ease, visibility 1s ease;
+  }
+  #loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+  #loader .orb {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,126,179,0.8), rgba(168,85,247,0.4), transparent);
+    animation: orbFloat 2s ease-in-out infinite;
+    box-shadow: 0 0 60px 20px rgba(168,85,247,0.3), 0 0 120px 40px rgba(255,126,179,0.15);
+  }
+  #loader p {
+    margin-top: 30px;
+    font-size: 14px;
+    letter-spacing: 6px;
+    color: rgba(200,180,255,0.6);
+    animation: textPulse 2s ease-in-out infinite;
+  }
+  @keyframes orbFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-20px) scale(1.1); }
+  }
+  @keyframes textPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ====== MAIN CONTENT ====== */
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ====== HERO SECTION ====== */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 40px 20px;
+  }
+
+  /* Decorative trees frame */
+  .hero::before, .hero::after {
+    content: '';
+    position: fixed;
+    top: 0; bottom: 0;
+    width: 80px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .hero::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(10,14,39,0.9) 0%, rgba(10,14,39,0.4) 60%, transparent 100%);
+  }
+  .hero::after {
+    right: 0;
+    background: linear-gradient(-90deg, rgba(10,14,39,0.9) 0%, rgba(10,14,39,0.4) 60%, transparent 100%);
+  }
+
+  /* ====== TITLE ====== */
+  .title-section {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .title-cn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #f0c27f 0%, #ff7eb3 40%, #a855f7 70%, #6b4fa0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 12px;
+    position: relative;
+    animation: titleGlow 4s ease-in-out infinite;
+    text-shadow: none;
+    filter: drop-shadow(0 0 30px rgba(168,85,247,0.3));
+  }
+  .title-en {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+    letter-spacing: 12px;
+    color: rgba(200,180,255,0.4);
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+  .title-line {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glow-purple), var(--glow-pink), var(--glow-purple), transparent);
+    margin: 20px auto 0;
+    animation: lineExpand 3s ease-in-out infinite;
+  }
+  @keyframes titleGlow {
+    0%, 100% { filter: drop-shadow(0 0 30px rgba(168,85,247,0.3)); }
+    50% { filter: drop-shadow(0 0 50px rgba(255,126,179,0.5)); }
+  }
+  @keyframes lineExpand {
+    0%, 100% { width: 120px; opacity: 0.6; }
+    50% { width: 200px; opacity: 1; }
+  }
+
+  /* ====== MYSTIC SUBTITLE ====== */
+  .subtitle {
+    text-align: center;
+    margin-bottom: 50px;
+    font-size: clamp(0.85rem, 2vw, 1.1rem);
+    color: rgba(200,180,255,0.5);
+    letter-spacing: 4px;
+    line-height: 2;
+  }
+  .subtitle span {
+    display: inline-block;
+    animation: subtitleFloat 6s ease-in-out infinite;
+  }
+  .subtitle span:nth-child(2) { animation-delay: 0.5s; }
+  .subtitle span:nth-child(3) { animation-delay: 1s; }
+  @keyframes subtitleFloat {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(-4px); opacity: 0.8; }
+  }
+
+  /* ====== VIDEO CONTAINER ====== */
+  .video-container {
+    position: relative;
+    width: min(90vw, 900px);
+    aspect-ratio: 16/9;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 50px;
+    box-shadow:
+      0 0 0 1px rgba(168,85,247,0.2),
+      0 0 40px rgba(168,85,247,0.15),
+      0 0 80px rgba(255,126,179,0.1),
+      0 20px 60px rgba(0,0,0,0.5);
+  }
+  .video-container::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--glow-purple), var(--glow-pink), var(--gold), var(--glow-purple));
+    background-size: 300% 300%;
+    animation: borderGlow 6s ease infinite;
+    z-index: -1;
+    opacity: 0.5;
+  }
+  .video-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: linear-gradient(180deg, transparent 60%, rgba(10,14,39,0.6) 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+  @keyframes borderGlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 16px;
+  }
+
+  /* Video placeholder for demo */
+  .video-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0d1137, #1a1050, #0d1137);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  .video-placeholder:hover { transform: scale(1.01); }
+
+  /* Animated background for placeholder */
+  .vp-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 80%, rgba(255,126,179,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(107,79,160,0.1) 0%, transparent 70%);
+    animation: vpBgShift 8s ease-in-out infinite;
+  }
+  @keyframes vpBgShift {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+
+  /* Placeholder jellyfish */
+  .vp-jellyfish {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, rgba(255,126,179,0.6), rgba(168,85,247,0.3), transparent);
+    animation: jellyfishFloat var(--dur) ease-in-out infinite;
+    opacity: 0.5;
+  }
+  .vp-jellyfish::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 30px;
+    background: linear-gradient(to bottom, rgba(255,126,179,0.4), transparent);
+  }
+  .vp-j1 { width: 40px; height: 28px; top: 15%; left: 20%; --dur: 7s; animation-delay: 0s; }
+  .vp-j2 { width: 55px; height: 38px; top: 10%; left: 55%; --dur: 9s; animation-delay: 1s; }
+  .vp-j3 { width: 30px; height: 20px; top: 25%; left: 75%; --dur: 6s; animation-delay: 2s; }
+  .vp-j4 { width: 35px; height: 24px; top: 8%; left: 35%; --dur: 8s; animation-delay: 3s; }
+  .vp-j5 { width: 25px; height: 18px; top: 20%; left: 85%; --dur: 5s; animation-delay: 1.5s; }
+  @keyframes jellyfishFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(10px, -15px) rotate(5deg); }
+    50% { transform: translate(-5px, -25px) rotate(-3deg); }
+    75% { transform: translate(15px, -10px) rotate(7deg); }
+  }
+
+  /* Placeholder fox lights */
+  .vp-fox {
+    position: absolute;
+    width: 6px; height: 6px;
+    background: radial-gradient(circle, rgba(240,194,127,0.9), transparent);
+    border-radius: 50%;
+    animation: foxDance var(--dur) ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(240,194,127,0.5);
+  }
+  .vp-fox::before {
+    content: '';
+    position: absolute;
+    top: -4px; left: -2px;
+    width: 10px; height: 5px;
+    border-top-left-radius: 50%;
+    border-top-right-radius: 50%;
+    background: rgba(240,194,127,0.3);
+  }
+  .vp-f1 { top: 30%; left: 15%; --dur: 4s; animation-delay: 0s; }
+  .vp-f2 { top: 35%; left: 25%; --dur: 3.5s; animation-delay: 0.5s; }
+  .vp-f3 { top: 28%; left: 80%; --dur: 4.5s; animation-delay: 1s; }
+  .vp-f4 { top: 40%; left: 70%; --dur: 3s; animation-delay: 1.5s; }
+  .vp-f5 { top: 25%; left: 50%; --dur: 5s; animation-delay: 0.8s; }
+  @keyframes foxDance {
+    0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+    50% { transform: translate(var(--tx, 20px), var(--ty, -15px)); opacity: 0.8; }
+  }
+
+  /* Placeholder couple silhouettes */
+  .vp-couple {
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+  }
+  .vp-person {
+    width: 18px;
+    background: linear-gradient(to top, rgba(10,14,39,0.9), rgba(107,79,160,0.3));
+    border-radius: 8px 8px 0 0;
+    position: relative;
+  }
+  .vp-person::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px; height: 12px;
+    background: radial-gradient(circle, rgba(200,180,255,0.4), transparent);
+    border-radius: 50%;
+  }
+  .vp-p1 { height: 35px; }
+  .vp-p2 { height: 32px; }
+
+  /* Play button */
+  .play-btn {
+    position: relative;
+    z-index: 5;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(168,85,247,0.15);
+    border: 2px solid rgba(255,126,179,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+    animation: playPulse 3s ease-in-out infinite;
+  }
+  .play-btn:hover {
+    background: rgba(168,85,247,0.3);
+    border-color: rgba(255,126,179,0.6);
+    transform: scale(1.1);
+  }
+  .play-btn svg {
+    width: 30px; height: 30px;
+    fill: rgba(255,200,220,0.8);
+    margin-left: 4px;
+  }
+  @keyframes playPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.2), 0 0 30px rgba(168,85,247,0.1); }
+    50% { box-shadow: 0 0 0 15px rgba(168,85,247,0), 0 0 50px rgba(255,126,179,0.15); }
+  }
+
+  .play-text {
+    position: relative;
+    z-index: 5;
+    margin-top: 20px;
+    font-size: 0.8rem;
+    letter-spacing: 4px;
+    color: rgba(200,180,255,0.4);
+  }
+
+  /* ====== DESCRIPTION SECTION ====== */
+  .description {
+    max-width: 700px;
+    margin: 0 auto 80px;
+    padding: 0 30px;
+    text-align: center;
+  }
+  .desc-line {
+    font-size: clamp(0.9rem, 2vw, 1.05rem);
+    line-height: 2.2;
+    color: rgba(200,180,255,0.55);
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+  .desc-highlight {
+    color: var(--glow-pink);
+    font-weight: 500;
+  }
+
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glow-purple), transparent);
+    margin: 40px auto;
+  }
+
+  /* ====== FLOATING JELLYFISH (Page decorations) ====== */
+  .page-jellyfish {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255,126,179,0.4), rgba(168,85,247,0.2), transparent);
+    pointer-events: none;
+    z-index: 0;
+    animation: pageJelly var(--dur) ease-in-out infinite;
+    opacity: 0.15;
+  }
+  .page-jelly::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 40%;
+    background: linear-gradient(to bottom, rgba(255,126,179,0.2), transparent);
+  }
+  .pj1 { width: 80px; height: 55px; top: 10%; right: 5%; --dur: 12s; animation-delay: 0s; }
+  .pj2 { width: 50px; height: 35px; top: 30%; left: 3%; --dur: 10s; animation-delay: 2s; }
+  .pj3 { width: 65px; height: 45px; bottom: 20%; right: 10%; --dur: 14s; animation-delay: 4s; }
+  .pj4 { width: 40px; height: 28px; top: 50%; left: 8%; --dur: 9s; animation-delay: 1s; }
+  @keyframes pageJelly {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(20px, -30px) rotate(5deg); }
+    66% { transform: translate(-15px, -20px) rotate(-5deg); }
+  }
+
+  /* ====== FOOTER ====== */
+  .footer {
+    text-align: center;
+    padding: 40px 20px 60px;
+    position: relative;
+  }
+  .footer-logo {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 6px;
+    color: rgba(200,180,255,0.25);
+    margin-bottom: 12px;
+  }
+  .footer-text {
+    font-size: 0.7rem;
+    color: rgba(200,180,255,0.15);
+    letter-spacing: 3px;
+  }
+
+  /* ====== QR CODE SECTION ====== */
+  .qr-section {
+    text-align: center;
+    padding: 60px 20px 40px;
+    position: relative;
+  }
+  .qr-label {
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    color: rgba(200,180,255,0.4);
+    margin-bottom: 24px;
+  }
+  .qr-wrapper {
+    display: inline-block;
+    padding: 20px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 16px;
+    border: 1px solid rgba(168,85,247,0.15);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(168,85,247,0.08);
+    position: relative;
+  }
+  .qr-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.3), transparent, rgba(255,126,179,0.3));
+    z-index: -1;
+  }
+  .qr-wrapper canvas {
+    border-radius: 8px;
+  }
+  .qr-hint {
+    margin-top: 16px;
+    font-size: 0.7rem;
+    color: rgba(200,180,255,0.25);
+    letter-spacing: 2px;
+  }
+
+  /* ====== SCROLL INDICATOR ====== */
+  .scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    animation: scrollBounce 2s ease-in-out infinite;
+  }
+  .scroll-indicator span {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    color: rgba(200,180,255,0.25);
+  }
+  .scroll-arrow {
+    width: 20px; height: 20px;
+    border-right: 1px solid rgba(200,180,255,0.25);
+    border-bottom: 1px solid rgba(200,180,255,0.25);
+    transform: rotate(45deg);
+  }
+  @keyframes scrollBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* ====== RESPONSIVE ====== */
+  @media (max-width: 768px) {
+    .hero::before, .hero::after { width: 40px; }
+    .video-container { width: 95vw; border-radius: 12px; }
+    .video-container::before { border-radius: 14px; }
+    .title-cn { letter-spacing: 6px; }
+    .play-btn { width: 60px; height: 60px; }
+    .play-btn svg { width: 22px; height: 22px; }
+  }
+
+  /* ====== AMBIENT GLOW ORBS ====== */
+  .ambient-orb {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(80px);
+  }
+  .ao1 {
+    width: 300px; height: 300px;
+    background: rgba(168,85,247,0.08);
+    top: 20%; left: -100px;
+    animation: orbDrift 20s ease-in-out infinite;
+  }
+  .ao2 {
+    width: 250px; height: 250px;
+    background: rgba(255,126,179,0.06);
+    bottom: 10%; right: -80px;
+    animation: orbDrift 18s ease-in-out infinite reverse;
+  }
+  .ao3 {
+    width: 200px; height: 200px;
+    background: rgba(107,79,160,0.06);
+    top: 50%; left: 50%;
+    animation: orbDrift 25s ease-in-out infinite;
+  }
+  @keyframes orbDrift {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(50px, -30px); }
+    50% { transform: translate(-20px, 40px); }
+    75% { transform: translate(30px, 20px); }
+  }
+
+  /* ====== TREE GLOW ACCENTS ====== */
+  .tree-glow {
+    position: fixed;
+    bottom: 0;
+    width: 4px;
+    height: 200px;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.15;
+  }
+  .tg-left {
+    left: 20px;
+    background: linear-gradient(to top, rgba(255,126,179,0.4), transparent);
+    border-radius: 2px;
+    animation: treePulse 4s ease-in-out infinite;
+  }
+  .tg-right {
+    right: 20px;
+    background: linear-gradient(to top, rgba(168,85,247,0.4), transparent);
+    border-radius: 2px;
+    animation: treePulse 4s ease-in-out infinite 2s;
+  }
+  @keyframes treePulse {
+    0%, 100% { opacity: 0.1; height: 200px; }
+    50% { opacity: 0.25; height: 250px; }
+  }
+
+  /* ====== CUSTOM CURSOR GLOW ====== */
+  .cursor-glow {
+    position: fixed;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168,85,247,0.06), transparent 70%);
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s;
+  }
+
+  /* ====== AUDIO TOGGLE ====== */
+  .audio-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  }
+  .audio-toggle:hover {
+    background: rgba(168,85,247,0.2);
+    border-color: rgba(255,126,179,0.3);
+  }
+  .audio-toggle svg {
+    width: 18px; height: 18px;
+    fill: rgba(200,180,255,0.5);
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loader">
+  <div class="orb"></div>
+  <p>欧 哈 纳</p>
+</div>
+
+<!-- Cursor Glow -->
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- Ambient Orbs -->
+<div class="ambient-orb ao1"></div>
+<div class="ambient-orb ao2"></div>
+<div class="ambient-orb ao3"></div>
+
+<!-- Tree Glow Accents -->
+<div class="tree-glow tg-left"></div>
+<div class="tree-glow tg-right"></div>
+
+<!-- Starfield -->
+<canvas id="starfield"></canvas>
+
+<!-- Page Jellyfish -->
+<div class="page-jellyfish pj1"></div>
+<div class="page-jellyfish pj2"></div>
+<div class="page-jellyfish pj3"></div>
+<div class="page-jellyfish pj4"></div>
+
+<!-- Audio Toggle -->
+<div class="audio-toggle" id="audioToggle" title="背景音乐">
+  <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+</div>
+
+<!-- Main Content -->
+<div class="page-wrapper">
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="title-section">
+      <h1 class="title-cn">欧哈纳</h1>
+      <p class="title-en">Ohana · 家人</p>
+      <div class="title-line"></div>
+    </div>
+
+    <div class="subtitle">
+      <span>在星空与梦境的交界处</span><br>
+      <span>水母轻舞 · 灵狐相伴</span><br>
+      <span>与你共赴一场永恒的约定</span>
+    </div>
+
+    <!-- Video Container -->
+    <div class="video-container" id="videoContainer">
+      <!--
+        如果你有真实视频文件，取消下面的注释并删除 video-placeholder：
+        <video id="mainVideo" controls loop muted playsinline poster="poster.jpg">
+          <source src="your-video.mp4" type="video/mp4">
+        </video>
+      -->
+      <div class="video-placeholder" id="videoPlaceholder">
+        <div class="vp-bg"></div>
+        <!-- Animated jellyfish -->
+        <div class="vp-jellyfish vp-j1"></div>
+        <div class="vp-jellyfish vp-j2"></div>
+        <div class="vp-jellyfish vp-j3"></div>
+        <div class="vp-jellyfish vp-j4"></div>
+        <div class="vp-jellyfish vp-j5"></div>
+        <!-- Fox spirits -->
+        <div class="vp-fox vp-f1" style="--tx:15px;--ty:-20px"></div>
+        <div class="vp-fox vp-f2" style="--tx:-10px;--ty:-25px"></div>
+        <div class="vp-fox vp-f3" style="--tx:20px;--ty:-10px"></div>
+        <div class="vp-fox vp-f4" style="--tx:-15px;--ty:-30px"></div>
+        <div class="vp-fox vp-f5" style="--tx:10px;--ty:-20px"></div>
+        <!-- Couple -->
+        <div class="vp-couple">
+          <div class="vp-person vp-p1"></div>
+          <div class="vp-person vp-p2"></div>
+        </div>
+        <!-- Play Button -->
+        <div class="play-btn" id="playBtn">
+          <svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"/></svg>
+        </div>
+        <p class="play-text">点 击 播 放</p>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="description">
+      <p class="desc-line">
+        夜幕低垂，星河如瀑。<br>
+        幽蓝的森林中，<span class="desc-highlight">发光的水母</span>在夜空悠然漂游，<br>
+        如梦境般绚烂的触须，轻轻拂过天际。
+      </p>
+      <div class="divider"></div>
+      <p class="desc-line">
+        灵狐穿梭于发光的古树之间，<br>
+        每一棵树上都镌刻着<span class="desc-highlight">远古的符文</span>。<br>
+        河水倒映着漫天星辉，泛着温柔的粉紫微光。
+      </p>
+      <div class="divider"></div>
+      <p class="desc-line">
+        一对身影静静坐在河畔，<br>
+        仰望着这片不属于尘世的风景。<br>
+        <span class="desc-highlight">「欧哈纳」</span>——家人，<br>
+        意味着没有人会被遗忘，也没有人会被抛下。
+      </p>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator">
+      <span>向下滑动</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- QR Code Section -->
+  <section class="qr-section" id="qrSection">
+    <p class="qr-label">扫 码 分 享</p>
+    <div class="qr-wrapper">
+      <canvas id="qrCanvas" width="200" height="200"></canvas>
+    </div>
+    <p class="qr-hint">扫描上方二维码 · 进入欧哈纳的世界</p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-logo">O H A N A</div>
+    <p class="footer-text">没有人会被遗忘 · 也没有人会被抛下</p>
+  </footer>
+
+</div>
+
+<!-- QR Code Library (embedded minimal QR generator) -->
+<script>
+// ====== MINIMAL QR CODE GENERATOR ======
+const QRCode = (() => {
+  const _QRMath = (() => {
+    const EXP_TABLE = new Array(256);
+    const LOG_TABLE = new Array(256);
+    for (let i = 0; i < 8; i++) EXP_TABLE[i] = 1 << i;
+    for (let i = 8; i < 256; i++) EXP_TABLE[i] = EXP_TABLE[i - 4] ^ EXP_TABLE[i - 5] ^ EXP_TABLE[i - 6] ^ EXP_TABLE[i - 8];
+    for (let i = 0; i < 255; i++) LOG_TABLE[EXP_TABLE[i]] = i;
+    return {
+      glog: (n) => { if (n < 1) throw new Error('glog(' + n + ')'); return LOG_TABLE[n]; },
+      gexp: (n) => { while (n < 0) n += 255; while (n >= 256) n -= 255; return EXP_TABLE[n]; }
+    };
+  })();
+
+  class QR8bitByte {
+    constructor(data) { this.mode = 4; this.data = data; }
+    getLength() { return this.data.length; }
+    write(buffer) {
+      for (let i = 0; i < this.data.length; i++) buffer.put(this.data.charCodeAt(i), 8);
+    }
+  }
+
+  class QRCodeModel {
+    constructor(typeNumber, errorCorrectLevel) {
+      this.typeNumber = typeNumber;
+      this.errorCorrectLevel = errorCorrectLevel;
+      this.modules = null;
+      this.moduleCount = 0;
+      this.dataCache = null;
+      this.dataList = [];
+    }
+    addData(data) {
+      this.dataList.push(new QR8bitByte(data));
+      this.dataCache = null;
+    }
+    isDark(row, col) {
+      if (row < 0 || this.moduleCount <= row || col < 0 || this.moduleCount <= col)
+        throw new Error(row + ',' + col);
+      return this.modules[row][col];
+    }
+    getModuleCount() { return this.moduleCount; }
+    make() {
+      this.makeImpl(false, this.getBestMaskPattern());
+    }
+    makeImpl(test, maskPattern) {
+      this.moduleCount = this.typeNumber * 4 + 17;
+      this.modules = [];
+      for (let row = 0; row < this.moduleCount; row++) {
+        this.modules[row] = [];
+        for (let col = 0; col < this.moduleCount; col++) this.modules[row][col] = null;
+      }
+      this.setupPositionProbePattern(0, 0);
+      this.setupPositionProbePattern(this.moduleCount - 7, 0);
+      this.setupPositionProbePattern(0, this.moduleCount - 7);
+      this.setupPositionAdjustPattern();
+      this.setupTimingPattern();
+      this.setupTypeInfo(test, maskPattern);
+      if (this.typeNumber >= 7) this.setupTypeNumber(test);
+      if (this.dataCache == null) this.dataCache = QRCodeModel.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+      this.mapData(this.dataCache, maskPattern);
+    }
+    setupPositionProbePattern(row, col) {
+      for (let r = -1; r <= 7; r++) {
+        if (row + r <= -1 || this.moduleCount <= row + r) continue;
+        for (let c = -1; c <= 7; c++) {
+          if (col + c <= -1 || this.moduleCount <= col + c) continue;
+          if ((0 <= r && r <= 6 && (c == 0 || c == 6)) || (0 <= c && c <= 6 && (r == 0 || r == 6)) || (2 <= r && r <= 4 && 2 <= c && c <= 4))
+            this.modules[row + r][col + c] = true;
+          else this.modules[row + r][col + c] = false;
+        }
+      }
+    }
+    getBestMaskPattern() {
+      let minLostPoint = 0, pattern = 0;
+      for (let i = 0; i < 8; i++) {
+        this.makeImpl(true, i);
+        const lostPoint = QRUtil.getLostPoint(this);
+        if (i == 0 || minLostPoint > lostPoint) { minLostPoint = lostPoint; pattern = i; }
+      }
+      return pattern;
+    }
+    createMovieClip(typeNumber, errorCorrectLevel) {
+      const qr = new QRCodeModel(typeNumber, errorCorrectLevel);
+      qr.make();
+      return qr;
+    }
+    setupTimingPattern() {
+      for (let r = 8; r < this.moduleCount - 8; r++) {
+        if (this.modules[r][6] != null) continue;
+        this.modules[r][6] = (r % 2 == 0);
+      }
+      for (let c = 8; c < this.moduleCount - 8; c++) {
+        if (this.modules[6][c] != null) continue;
+        this.modules[6][c] = (c % 2 == 0);
+      }
+    }
+    setupPositionAdjustPattern() {
+      const pos = QRUtil.getPatternPosition(this.typeNumber);
+      for (let i = 0; i < pos.length; i++) {
+        for (let j = 0; j < pos.length; j++) {
+          const row = pos[i], col = pos[j];
+          if (this.modules[row][col] != null) continue;
+          for (let r = -2; r <= 2; r++) {
+            for (let c = -2; c <= 2; c++) {
+              if (r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0))
+                this.modules[row + r][col + c] = true;
+              else this.modules[row + r][col + c] = false;
+            }
+          }
+        }
+      }
+    }
+    setupTypeNumber(test) {
+      const bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+      for (let i = 0; i < 18; i++) {
+        const mod = (!test && ((bits >> i) & 1) == 1);
+        this.modules[Math.floor(i / 3)][i % 3 + this.moduleCount - 8 - 3] = mod;
+      }
+      for (let i = 0; i < 18; i++) {
+        const mod = (!test && ((bits >> i) & 1) == 1);
+        this.modules[i % 3 + this.moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    }
+    setupTypeInfo(test, maskPattern) {
+      const data = (this.errorCorrectLevel << 3) | maskPattern;
+      const bits = QRUtil.getBCHTypeInfo(data);
+      for (let i = 0; i < 15; i++) {
+        const mod = (!test && ((bits >> i) & 1) == 1);
+        if (i < 6) this.modules[i][8] = mod;
+        else if (i < 8) this.modules[i + 1][8] = mod;
+        else this.modules[this.moduleCount - 15 + i][8] = mod;
+      }
+      for (let i = 0; i < 15; i++) {
+        const mod = (!test && ((bits >> i) & 1) == 1);
+        if (i < 8) this.modules[8][this.moduleCount - i - 1] = mod;
+        else if (i < 9) this.modules[8][15 - i - 1 + 1] = mod;
+        else this.modules[8][15 - i - 1] = mod;
+      }
+      this.modules[this.moduleCount - 8][8] = (!test);
+    }
+    mapData(data, maskPattern) {
+      let inc = -1, row = this.moduleCount - 1, bitIndex = 7, byteIndex = 0;
+      for (let col = this.moduleCount - 1; col > 0; col -= 2) {
+        if (col == 6) col--;
+        while (true) {
+          for (let c = 0; c < 2; c++) {
+            if (this.modules[row][col - c] == null) {
+              let dark = false;
+              if (byteIndex < data.length) dark = ((data[byteIndex] >>> bitIndex) & 1) == 1;
+              const mask = QRUtil.getMask(maskPattern, row, col - c);
+              if (mask) dark = !dark;
+              this.modules[row][col - c] = dark;
+              bitIndex--;
+              if (bitIndex == -1) { byteIndex++; bitIndex = 7; }
+            }
+          }
+          row += inc;
+          if (row < 0 || this.moduleCount <= row) { row -= inc; inc = -inc; break; }
+        }
+      }
+    }
+    static createData(typeNumber, errorCorrectLevel, dataList) {
+      const rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+      const buffer = new QRBitBuffer();
+      for (let i = 0; i < dataList.length; i++) {
+        const data = dataList[i];
+        buffer.put(data.mode, 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber));
+        data.write(buffer);
+      }
+      let totalDataCount = 0;
+      for (let i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+      if (buffer.getLengthInBits() > totalDataCount * 8)
+        throw new Error('code length overflow. (' + buffer.getLengthInBits() + '>' + totalDataCount * 8 + ')');
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) buffer.put(0, 4);
+      while (buffer.getLengthInBits() % 8 != 0) buffer.putBit(false);
+      while (true) {
+        if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+        buffer.put(0xEC, 8);
+        if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+        buffer.put(0x11, 8);
+      }
+      return QRCodeModel.createBytes(buffer, rsBlocks);
+    }
+    static createBytes(buffer, rsBlocks) {
+      let offset = 0;
+      let maxDcCount = 0, maxEcCount = 0;
+      const dcdata = [], ecdata = [];
+      for (let r = 0; r < rsBlocks.length; r++) {
+        const dcCount = rsBlocks[r].dataCount, ecCount = rsBlocks[r].totalCount - dcCount;
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+        dcdata[r] = [];
+        for (let i = 0; i < dcCount; i++) dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+        offset += dcCount;
+        const rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        const rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+        const modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = [];
+        for (let i = 0; i < modPoly.getLength(); i++) ecdata[r][i] = modPoly.get(i);
+      }
+      let totalCodeCount = 0;
+      for (let i = 0; i < rsBlocks.length; i++) totalCodeCount += rsBlocks[i].totalCount;
+      const data = [];
+      for (let i = 0; i < maxDcCount; i++)
+        for (let r = 0; r < rsBlocks.length; r++)
+          if (i < dcdata[r].length) data.push(dcdata[r][i]);
+      for (let i = 0; i < maxEcCount; i++)
+        for (let r = 0; r < rsBlocks.length; r++)
+          if (i < ecdata[r].length) data.push(ecdata[r][i]);
+      return data;
+    }
+  }
+
+  class QRBitBuffer {
+    constructor() { this.buffer = []; this.length = 0; }
+    get(index) { const bufIndex = Math.floor(index / 8); return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1) == 1; }
+    put(num, length) { for (let i = 0; i < length; i++) this.putBit(((num >>> (length - i - 1)) & 1) == 1); }
+    getLengthInBits() { return this.length; }
+    putBit(bit) {
+      const bufIndex = Math.floor(this.length / 8);
+      if (this.buffer.length <= bufIndex) this.buffer.push(0);
+      if (bit) this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+      this.length++;
+    }
+  }
+
+  class QRPolynomial {
+    constructor(num, shift) {
+      let offset = 0;
+      while (offset < num.length && num[offset] == 0) offset++;
+      this.num = [];
+      for (let i = offset; i < num.length; i++) this.num.push(num[i]);
+      for (let i = 0; i < shift; i++) this.num.push(0);
+    }
+    get(index) { return this.num[index]; }
+    getLength() { return this.num.length; }
+    multiply(e) {
+      const num = [];
+      for (let i = 0; i < this.getLength(); i++)
+        for (let j = 0; j < e.getLength(); j++)
+          num[i + j] ^= _QRMath.gexp(_QRMath.glog(this.get(i)) + _QRMath.glog(e.get(j)));
+      return new QRPolynomial(num, 0);
+    }
+    mod(e) {
+      if (this.getLength() - e.getLength() < 0) return this;
+      const ratio = _QRMath.glog(this.get(0)) - _QRMath.glog(e.get(0));
+      const num = [];
+      for (let i = 0; i < this.getLength(); i++) num.push(this.get(i));
+      for (let i = 0; i < e.getLength(); i++) num[i] ^= _QRMath.gexp(_QRMath.glog(e.get(i)) + ratio);
+      return new QRPolynomial(num, 0).mod(e);
+    }
+  }
+
+  const QRRSBlock = (() => {
+    const RS_BLOCK_TABLE = [
+      [1,26,19],[1,26,16],[1,26,13],[1,26,9],
+      [1,44,34],[1,44,28],[1,44,22],[1,44,16],
+      [1,70,55],[1,70,44],[2,35,17],[2,35,13],
+      [1,100,80],[2,50,32],[2,50,24],[4,25,9],
+      [1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],
+      [2,86,68],[4,43,27],[4,43,19],[4,43,15],
+      [2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],
+      [2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],
+      [2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],
+      [2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],
+      [4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],
+      [2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],
+      [4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],
+      [3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],
+      [5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],
+      [5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],
+      [1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],
+      [5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],
+      [3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],
+      [3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],
+      [4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],
+      [2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],
+      [4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],
+      [6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],
+      [8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],
+      [10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],
+      [8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],
+      [3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],
+      [7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],
+      [5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],
+      [13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],
+      [17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],
+      [17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],
+      [13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],
+      [12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],
+      [6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],
+      [17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],
+      [4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],
+      [20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],
+      [19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]
+    ];
+    return {
+      getRSBlocks: (typeNumber, errorCorrectLevel) => {
+        const table = RS_BLOCK_TABLE[(typeNumber - 1) * 4 + errorCorrectLevel];
+        if (!table) throw new Error('bad rs block @ typeNumber:' + typeNumber + '/errorCorrectLevel:' + errorCorrectLevel);
+        const blocks = [], len = table.length / 3;
+        for (let i = 0; i < len; i++) {
+          const count = table[i * 3], totalCount = table[i * 3 + 1], dataCount = table[i * 3 + 2];
+          for (let j = 0; j < count; j++) blocks.push({ totalCount, dataCount });
+        }
+        return blocks;
+      }
+    };
+  })();
+
+  const QRUtil = (() => {
+    const PATTERN_POSITION_TABLE = [
+      [], [6,18], [6,22], [6,26], [6,30], [6,34],
+      [6,22,38], [6,24,42], [6,26,46], [6,28,50],
+      [6,30,54], [6,32,58], [6,34,62], [6,26,46,66],
+      [6,26,48,70], [6,26,50,74], [6,30,54,78], [6,30,56,82],
+      [6,30,58,86], [6,34,62,90], [6,28,50,72,94], [6,26,50,74,98],
+      [6,30,54,78,102], [6,28,54,80,106], [6,32,58,84,110], [6,30,58,86,114],
+      [6,34,62,90,118], [6,26,50,74,98,122], [6,30,54,78,102,126],
+      [6,26,52,78,104,130], [6,30,56,82,108,134], [6,34,60,86,112,138],
+      [6,30,58,86,114,142], [6,34,62,90,118,146], [6,30,54,78,102,126,150],
+      [6,24,50,76,102,128,154], [6,28,54,80,106,132,158], [6,32,58,84,110,136,162],
+      [6,26,54,82,110,138,166], [6,30,58,86,114,142,170]
+    ];
+    const G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    const G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    const G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+    return {
+      getPatternPosition: (typeNumber) => PATTERN_POSITION_TABLE[typeNumber - 1],
+      getMask: (maskPattern, i, j) => {
+        switch (maskPattern) {
+          case 0: return (i + j) % 2 == 0;
+          case 1: return i % 2 == 0;
+          case 2: return j % 3 == 0;
+          case 3: return (i + j) % 3 == 0;
+          case 4: return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 == 0;
+          case 5: return (i * j) % 2 + (i * j) % 3 == 0;
+          case 6: return ((i * j) % 2 + (i * j) % 3) % 2 == 0;
+          case 7: return ((i * j) % 3 + (i + j) % 2) % 2 == 0;
+          default: throw new Error('bad maskPattern:' + maskPattern);
+        }
+      },
+      getErrorCorrectPolynomial: (errorCorrectLength) => {
+        let a = new QRPolynomial([1], 0);
+        for (let i = 0; i < errorCorrectLength; i++) a = a.multiply(new QRPolynomial([1, _QRMath.gexp(i)], 0));
+        return a;
+      },
+      getLengthInBits: (mode, type) => {
+        if (1 <= type && type < 10) return [10,9,8,8][mode];
+        else if (type < 27) return [12,11,16,10][mode];
+        else if (type < 41) return [14,13,16,12][mode];
+        else throw new Error('type:' + type);
+      },
+      getBCHTypeInfo: (data) => {
+        let d = data << 10;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(G15) >= 0) d ^= (G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(G15)));
+        return ((data << 10) | d) ^ G15_MASK;
+      },
+      getBCHTypeNumber: (data) => {
+        let d = data << 12;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(G18) >= 0) d ^= (G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(G18)));
+        return (data << 12) | d;
+      },
+      getBCHDigit: (data) => {
+        let digit = 0;
+        while (data != 0) { digit++; data >>>= 1; }
+        return digit;
+      },
+      getLostPoint: (qrCode) => {
+        const mc = qrCode.getModuleCount();
+        let lostPoint = 0;
+        for (let row = 0; row < mc; row++)
+          for (let col = 0; col < mc; col++) {
+            let sameCount = 0;
+            const dark = qrCode.isDark(row, col);
+            for (let r = -1; r <= 1; r++) {
+              if (row + r < 0 || mc <= row + r) continue;
+              for (let c = -1; c <= 1; c++) {
+                if (col + c < 0 || mc <= col + c) continue;
+                if (r == 0 && c == 0) continue;
+                if (dark == qrCode.isDark(row + r, col + c)) sameCount++;
+              }
+            }
+            if (sameCount > 5) lostPoint += (3 + sameCount - 5);
+          }
+        for (let row = 0; row < mc - 1; row++)
+          for (let col = 0; col < mc - 1; col++) {
+            let count = 0;
+            if (qrCode.isDark(row, col)) count++;
+            if (qrCode.isDark(row + 1, col)) count++;
+            if (qrCode.isDark(row, col + 1)) count++;
+            if (qrCode.isDark(row + 1, col + 1)) count++;
+            if (count == 0 || count == 4) lostPoint += 3;
+          }
+        for (let row = 0; row < mc; row++)
+          for (let col = 0; col < mc - 6; col++)
+            if (qrCode.isDark(row, col) && !qrCode.isDark(row, col + 1) && qrCode.isDark(row, col + 2) &&
+                qrCode.isDark(row, col + 3) && qrCode.isDark(row, col + 4) &&
+                !qrCode.isDark(row, col + 5) && qrCode.isDark(row, col + 6))
+              lostPoint += 40;
+        for (let col = 0; col < mc; col++)
+          for (let row = 0; row < mc - 6; row++)
+            if (qrCode.isDark(row, col) && !qrCode.isDark(row + 1, col) && qrCode.isDark(row + 2, col) &&
+                qrCode.isDark(row + 3, col) && qrCode.isDark(row + 4, col) &&
+                !qrCode.isDark(row + 5, col) && qrCode.isDark(row + 6, col))
+              lostPoint += 40;
+        let darkCount = 0;
+        for (let col = 0; col < mc; col++)
+          for (let row = 0; row < mc; row++)
+            if (qrCode.isDark(row, col)) darkCount++;
+        const ratio = Math.abs(100 * darkCount / mc / mc - 50) / 5;
+        lostPoint += ratio * 10;
+        return lostPoint;
+      }
+    };
+  })();
+
+  return {
+    generate: (text, canvas, options = {}) => {
+      const { cellSize = 4, margin = 4, darkColor = '#a855f7', lightColor = 'rgba(10,14,39,0.85)' } = options;
+      const qr = new QRCodeModel(0, 1);
+      qr.addData(text);
+      qr.make();
+      const size = qr.getModuleCount();
+      const totalSize = (size + margin * 2) * cellSize;
+      canvas.width = totalSize;
+      canvas.height = totalSize;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = lightColor;
+      ctx.fillRect(0, 0, totalSize, totalSize);
+      ctx.fillStyle = darkColor;
+      for (let row = 0; row < size; row++)
+        for (let col = 0; col < size; col++)
+          if (qr.isDark(row, col))
+            ctx.fillRect((col + margin) * cellSize, (row + margin) * cellSize, cellSize, cellSize);
+    }
+  };
+})();
+
+// ====== STARFIELD ======
+const starCanvas = document.getElementById('starfield');
+const starCtx = starCanvas.getContext('2d');
+let stars = [];
+
+function resizeStarfield() {
+  starCanvas.width = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+  initStars();
+}
+
+function initStars() {
+  stars = [];
+  const count = Math.floor((starCanvas.width * starCanvas.height) / 3000);
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * starCanvas.width,
+      y: Math.random() * starCanvas.height,
+      radius: Math.random() * 1.5 + 0.3,
+      alpha: Math.random(),
+      alphaSpeed: Math.random() * 0.02 + 0.005,
+      alphaDir: Math.random() > 0.5 ? 1 : -1,
+      color: Math.random() > 0.7 ? 'rgba(168,85,247,' : Math.random() > 0.5 ? 'rgba(255,126,179,' : 'rgba(240,194,127,'
+    });
+  }
+}
+
+function drawStars() {
+  starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+  stars.forEach(star => {
+    star.alpha += star.alphaSpeed * star.alphaDir;
+    if (star.alpha >= 1) { star.alpha = 1; star.alphaDir = -1; }
+    if (star.alpha <= 0.1) { star.alpha = 0.1; star.alphaDir = 1; }
+    starCtx.beginPath();
+    starCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+    starCtx.fillStyle = star.color + star.alpha + ')';
+    starCtx.fill();
+    // Glow for bigger stars
+    if (star.radius > 1) {
+      starCtx.beginPath();
+      starCtx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2);
+      starCtx.fillStyle = star.color + (star.alpha * 0.15) + ')';
+      starCtx.fill();
+    }
+  });
+  requestAnimationFrame(drawStars);
+}
+
+window.addEventListener('resize', resizeStarfield);
+resizeStarfield();
+drawStars();
+
+// ====== CURSOR GLOW ======
+const cursorGlow = document.getElementById('cursorGlow');
+document.addEventListener('mousemove', (e) => {
+  cursorGlow.style.left = e.clientX + 'px';
+  cursorGlow.style.top = e.clientY + 'px';
+});
+
+// ====== LOADER ======
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hidden');
+  }, 1500);
+});
+
+// ====== QR CODE ======
+// 注意：这里使用当前页面的URL。部署后请确保URL正确。
+const qrUrl = window.location.href || 'https://ohana-fantasy.example.com';
+const qrCanvas = document.getElementById('qrCanvas');
+try {
+  QRCode.generate(qrUrl, qrCanvas, {
+    cellSize: 6,
+    margin: 4,
+    darkColor: '#a855f7',
+    lightColor: 'rgba(10,14,39,0.9)'
+  });
+} catch(e) {
+  console.log('QR generation note:', e.message);
+}
+
+// ====== AUDIO TOGGLE (placeholder) ======
+const audioToggle = document.getElementById('audioToggle');
+let audioPlaying = false;
+audioToggle.addEventListener('click', () => {
+  audioPlaying = !audioPlaying;
+  audioToggle.style.background = audioPlaying ? 'rgba(168,85,247,0.3)' : 'rgba(168,85,247,0.1)';
+  audioToggle.style.borderColor = audioPlaying ? 'rgba(255,126,179,0.5)' : 'rgba(168,85,247,0.2)';
+});
+
+// ====== PLAY BUTTON INTERACTION ======
+const playBtn = document.getElementById('playBtn');
+const videoPlaceholder = document.getElementById('videoPlaceholder');
+const videoContainer = document.getElementById('videoContainer');
+
+playBtn.addEventListener('click', () => {
+  // 替换为真实视频播放逻辑
+  videoPlaceholder.style.transition = 'opacity 0.5s';
+  videoPlaceholder.style.opacity = '0';
+  setTimeout(() => {
+    videoPlaceholder.style.display = 'none';
+    // 如果有真实视频，在这里创建 <video> 元素
+    const video = document.createElement('video');
+    video.src = 'C:\Users\昂热卡萨\Downloads\video1.mp4'; // 替换为实际视频路径
+    video.controls = true;
+    video.loop = true;
+    video.autoplay = true;
+    video.muted = false;
+    video.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:16px;';
+    videoContainer.appendChild(video);
+    video.play().catch(() => {
+      video.muted = true;
+      video.play();
+    });
+  }, 500);
+});
+
+// ====== SCROLL REVEAL ======
+const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, observerOptions);
+
+document.querySelectorAll('.description, .qr-section, .divider').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(30px)';
+  el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+  observer.observe(el);
+});
+
+// ====== PARALLAX on scroll ======
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  const hero = document.getElementById('hero');
+  if (hero) {
+    hero.style.transform = `translateY(${scrollY * 0.15}px)`;
+    hero.style.opacity = Math.max(0, 1 - scrollY / (window.innerHeight * 1.5));
+  }
+});
+</script>
+
+</body>
+</html>
+video.src
