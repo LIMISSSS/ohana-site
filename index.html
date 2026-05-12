@@ -690,11 +690,10 @@
     </div>
 
     <!-- Video Container -->
-    <div class="video-container" id="videoContainer">
       <!--
         如果你有真实视频文件，取消下面的注释并删除 video-placeholder：
-        <video id="mainVideo" controls loop muted playsinline poster="poster.jpg">
-          <source src="C:\Users\昂热卡萨\Desktop\video1.mp4" type="video/mp4">
+        <video id="mainVideo" controls loop autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;border-radius:16px;">
+  <source src="video1.mp4" type="video/mp4">
         </video>
       -->
       <div class="video-placeholder" id="videoPlaceholder">
@@ -1314,8 +1313,7 @@ playBtn.addEventListener('click', () => {
   setTimeout(() => {
     videoPlaceholder.style.display = 'none';
     // 如果有真实视频，在这里创建 <video> 元素
-    const video = document.createElement('video');
-    video.src = 'C:\Users\昂热卡萨\Desktop\video1.mp4'; // 替换为实际视频路径
+    const video = document.createElement('video')
     video.controls = true;
     video.loop = true;
     video.autoplay = true;
