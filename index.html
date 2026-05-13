@@ -689,12 +689,17 @@
       <span>与你共赴一场永恒的约定</span>
     </div>
 
-    <!-- Video Container -->
-      <!--
-        如果你有真实视频文件，取消下面的注释并删除 video-placeholder：
-        <video id="mainVideo" controls loop autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;border-radius:16px;">
-  <source src="video1.mp4" type="video/mp4">
-        </video>
+   <div class="video-container" id="videoWrapper">
+  <video id="mainVideo" src="video1.mp4" autoplay muted playsinline loop preload="auto">
+    您的浏览器不支持视频播放
+  </video>
+  <div class="video-overlay" id="videoOverlay">
+    <button class="play-btn" id="playBtn">
+      <svg viewBox="0 0 24 24" width="32" height="32"><polygon points="8,5 20,12 8,19" fill="#fff"/></svg>
+    </button>
+    <p class="play-text">点 击 播 放</p>
+  </div>
+</div>
       -->
       <div class="video-placeholder" id="videoPlaceholder">
         <div class="vp-bg"></div>
@@ -1301,30 +1306,46 @@ audioToggle.addEventListener('click', () => {
   audioToggle.style.borderColor = audioPlaying ? 'rgba(255,126,179,0.5)' : 'rgba(168,85,247,0.2)';
 });
 
-// ====== PLAY BUTTON INTERACTION ======
-const playBtn = document.getElementById('playBtn');
-const videoPlaceholder = document.getElementById('videoPlaceholder');
-const videoContainer = document.getElementById('videoContainer');
+// ====== PLAY BUTTON INTERACTION (已修复404与null报错) ======
+document.addEventListener('DOMContentLoaded', () => {
+  const playBtn = document.getElementById('playBtn');
+  const videoPlaceholder = document.getElementById('videoPlaceholder');
+  // 兼容 id 或 class，防止找不到容器
+  const videoContainer = document.getElementById('videoContainer') || document.querySelector('.video-container');
 
-playBtn.addEventListener('click', () => {
-  // 替换为真实视频播放逻辑
-  videoPlaceholder.style.transition = 'opacity 0.5s';
-  videoPlaceholder.style.opacity = '0';
-  setTimeout(() => {
-    videoPlaceholder.style.display = 'none';
-    // 如果有真实视频，在这里创建 <video> 元素
-    const video = document.createElement('video')
-    video.controls = true;
-    video.loop = true;
-    video.autoplay = true;
-    video.muted = false;
-    video.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:16px;';
-    videoContainer.appendChild(video);
-    video.play().catch(() => {
-      video.muted = true;
-      video.play();
-    });
-  }, 500);
+  // 安全拦截：元素不存在则不执行，彻底杜绝 appendChild 报错
+  if (!playBtn || !videoPlaceholder || !videoContainer) {
+    console.warn('⚠️ 视频容器或按钮未找到，请检查HTML中的id/class');
+    return;
+  }
+
+  playBtn.addEventListener('click', () => {
+    videoPlaceholder.style.transition = 'opacity 0.5s';
+    videoPlaceholder.style.opacity = '0';
+    
+    setTimeout(() => {
+      videoPlaceholder.style.display = 'none';
+
+      // 创建真实视频元素
+      const video = document.createElement('video');
+      video.src = './video1.mp4'; // ✅ 关键修复：补全视频路径
+      video.controls = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.muted = true;        // ✅ 浏览器强制要求：首次自动播放必须静音
+      video.playsInline = true;  // ✅ iOS 兼容
+      video.preload = 'auto';
+      video.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:16px;display:block;';
+
+      // 此时 container 必不为 null，安全追加
+      videoContainer.appendChild(video);
+
+      // 尝试播放
+      video.play().catch(() => {
+        console.warn('自动播放被拦截，已保持静音');
+      });
+    }, 500);
+  });
 });
 
 // ====== SCROLL REVEAL ======
